@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rubric Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Kalam:wght@700&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout idea: a graded answer sheet. Ruled paper, criteria set in typewriter mono, red-pencil marks only where a criterion breaks a rule. */
+  --paper: #F2F4F1;
+  --sheet: #FFFFFF;
+  --ink: #16202A;
+  --muted: #56636F;
+  --line: #D4DBD5;
+  --accent: #1D4F74;
+  --pencil: #C2352A;
+  --pass: #24734A;
+
+  --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-hand: "Kalam", "Comic Sans MS", cursive;
+
+  --pencil-tint: color-mix(in srgb, var(--pencil) 11%, var(--sheet));
+  --pass-tint: color-mix(in srgb, var(--pass) 12%, var(--sheet));
+  --accent-tint: color-mix(in srgb, var(--accent) 10%, var(--sheet));
+  --shade: color-mix(in srgb, var(--ink) 4%, var(--sheet));
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F141A;
+    --sheet: #161D25;
+    --ink: #E4E9EE;
+    --muted: #9DAAB6;
+    --line: #2A343E;
+    --accent: #8BB8DD;
+    --pencil: #FF7B6E;
+    --pass: #6DCF97;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F141A;
+  --sheet: #161D25;
+  --ink: #E4E9EE;
+  --muted: #9DAAB6;
+  --line: #2A343E;
+  --accent: #8BB8DD;
+  --pencil: #FF7B6E;
+  --pass: #6DCF97;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 4.6vw, 3.5rem); font-weight: 600; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 600; }
+h3 { font-size: 1.3rem; font-weight: 600; margin-top: 1.8rem; margin-bottom: .5rem; }
+h4 { font-size: 1.05rem; font-weight: 600; margin: 1.1rem 0 .3rem; }
+p { margin: 0 0 .9rem; }
+a { color: var(--accent); }
+code, .mono { font-family: var(--font-mono); font-size: .9em; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+.wrap { width: min(1180px, 100% - 2.5rem); margin-inline: auto; }
+
+/* Masthead */
+.masthead { border-bottom: 1px solid var(--line); background: var(--paper); }
+.masthead .wrap { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 0; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: .7rem; text-decoration: none; color: var(--ink); }
+.brand b { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; }
+.brand span { font-family: var(--font-mono); font-size: .78rem; color: var(--muted); }
+
+/* Hero */
+.hero { padding: clamp(2rem, 5vw, 3.5rem) 0 clamp(1.5rem, 4vw, 2.5rem); }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; }
+.hero p.lede { font-size: 1.2rem; color: var(--muted); max-width: 34rem; margin-top: 1rem; }
+.hero .stats { font-family: var(--font-mono); font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin: 1.2rem 0 1.5rem; }
+.hero .stats b { color: var(--ink); font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: .7rem; }
+
+.sheet {
+  position: relative;
+  background-color: var(--sheet);
+  background-image: repeating-linear-gradient(to bottom, transparent 0 31px, color-mix(in srgb, var(--line) 70%, transparent) 31px 32px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.4rem 1.4rem 1.3rem 3.2rem;
+  box-shadow: 0 1px 0 var(--line), 0 18px 40px -28px color-mix(in srgb, var(--ink) 45%, transparent);
+}
+.sheet::before {
+  content: "";
+  position: absolute; top: 0; bottom: 0; left: 2.2rem;
+  width: 1.5px; background: color-mix(in srgb, var(--pencil) 45%, transparent);
+}
+.sheet .tag { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.sheet .draft { font-family: var(--font-mono); font-size: 1rem; line-height: 2rem; margin: .2rem 0 .4rem; }
+.notes { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin: 0 0 .9rem; }
+.hand { font-family: var(--font-hand); color: var(--pencil); font-size: 1.15rem; line-height: 1.2; display: inline-block; transform: rotate(-2deg); }
+.fixes { display: grid; gap: .55rem; margin-top: .3rem; }
+.fix { display: grid; grid-template-columns: auto 1fr; gap: .7rem; align-items: start; font-family: var(--font-mono); font-size: .95rem; line-height: 1.5; }
+
+mark.flag {
+  background: none; color: inherit;
+  text-decoration: underline wavy var(--pencil);
+  text-decoration-thickness: 1.6px;
+  text-underline-offset: 6px;
+  text-decoration-skip-ink: none;
+  animation: draw .9s ease-out both;
+}
+@keyframes draw { from { text-decoration-color: var(--line); } to { text-decoration-color: var(--pencil); } }
+
+/* Chips and buttons */
+.chip {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-family: var(--font-mono); font-size: .72rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+  padding: .16rem .55rem; border-radius: 999px; border: 1.5px solid currentColor; white-space: nowrap; line-height: 1.4;
+}
+.chip.pass { color: var(--pass); }
+.chip.fail { color: var(--pencil); }
+.chip.info { color: var(--accent); }
+.chip.muted { color: var(--muted); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-weight: 700; font-size: .95rem;
+  padding: .62rem 1.15rem; border-radius: 999px;
+  border: 1.5px solid var(--accent); background: var(--accent); color: var(--sheet);
+  cursor: pointer; text-decoration: none; transition: transform .12s ease, background-color .12s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.small { padding: .4rem .85rem; font-size: .85rem; }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.btn.warn { border-color: var(--pencil); background: transparent; color: var(--pencil); }
+
+/* Tabs */
+.tabbar { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+.tabs { display: flex; gap: .2rem; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  border: 0; background: none; cursor: pointer;
+  padding: .85rem 1rem .75rem; font-weight: 700; font-size: .98rem; color: var(--muted);
+  border-bottom: 3px solid transparent; white-space: nowrap;
+}
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--pencil); }
+.tab .count { font-family: var(--font-mono); font-size: .75rem; font-weight: 500; color: var(--muted); margin-left: .35rem; }
+
+main { padding: 2rem 0 3rem; }
+.view[hidden] { display: none; }
+
+/* Learn */
+.learn { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 3rem); align-items: start; }
+.lesson-nav { position: sticky; top: 4.2rem; display: grid; gap: .15rem; }
+.lesson-nav button {
+  display: grid; grid-template-columns: 2.1rem 1fr; align-items: center; gap: .5rem;
+  text-align: left; border: 0; background: none; cursor: pointer; padding: .5rem .6rem; border-radius: 10px; font-size: .97rem;
+}
+.lesson-nav button .n { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.lesson-nav button:hover { background: var(--shade); }
+.lesson-nav button[aria-current="true"] { background: var(--sheet); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 700; }
+.lesson-nav button[aria-current="true"] .n { color: var(--pencil); }
+
+article.lesson { max-width: 46rem; }
+article.lesson .kicker { font-family: var(--font-mono); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+article.lesson .lede { font-size: 1.18rem; margin: 1rem 0 1.2rem; }
+article.lesson ul, article.lesson ol:not(.flow) { padding-left: 1.2rem; margin: 0 0 1rem; }
+article.lesson li { margin-bottom: .35rem; }
+.lesson-foot { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.2rem; padding-top: 1.2rem; border-top: 1px solid var(--line); flex-wrap: wrap; }
+
+.rule {
+  background: var(--sheet); border: 1px solid var(--line); border-radius: 12px;
+  padding: .95rem 1.1rem; margin: 1.2rem 0;
+}
+.rule b:first-child { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--pencil); display: block; margin-bottom: .2rem; }
+.note { color: var(--muted); font-size: .95rem; }
+
+ol.flow { list-style: none; padding: 0; margin: 1.4rem 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .9rem; counter-reset: step; }
+ol.flow li { position: relative; background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: .8rem .8rem .9rem; font-size: .9rem; color: var(--muted); }
+ol.flow li b { display: block; color: var(--ink); font-size: .98rem; margin-bottom: .25rem; }
+ol.flow li::before { counter-increment: step; content: counter(step); font-family: var(--font-mono); font-size: .72rem; color: var(--pencil); display: block; margin-bottom: .2rem; }
+ol.flow li:not(:last-child)::after { content: "\2192"; position: absolute; right: -.78rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1rem; }
+ol.flow li:last-child { background: var(--accent-tint); }
+
+.pair, .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; margin: .9rem 0 1rem; }
+.side { border-radius: 12px; padding: .9rem 1rem; border: 1px solid var(--line); background: var(--sheet); }
+.side.fail { background: var(--pencil-tint); border-color: color-mix(in srgb, var(--pencil) 30%, var(--line)); }
+.side.pass { background: var(--pass-tint); border-color: color-mix(in srgb, var(--pass) 30%, var(--line)); }
+.side.keep { background: var(--accent-tint); }
+.side ul { margin: .6rem 0 0; padding-left: 1.1rem; }
+.side li em { color: var(--muted); font-style: normal; font-family: var(--font-mono); font-size: .8rem; margin-left: .3rem; }
+p.crit { font-family: var(--font-mono); font-size: .93rem; line-height: 1.5; margin: .6rem 0 0; }
+
+.test { border-top: 1px solid var(--line); padding-top: .4rem; margin-top: 1.4rem; }
+.test h3 { display: flex; align-items: center; gap: .6rem; }
+.letter { display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--ink); color: var(--sheet); font-family: var(--font-mono); font-size: .95rem; font-weight: 600; }
+.flags { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; font-size: .92rem; color: var(--muted); }
+.flags code { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; padding: .05rem .4rem; color: var(--pencil); }
+
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+th, td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 700; font-size: .85rem; color: var(--muted); }
+td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td .crit-cell { font-family: var(--font-mono); font-size: .88rem; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .8rem; margin: 1rem 0; }
+.card { background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: .9rem 1rem; }
+.card h4 { margin-top: 0; }
+.card p { margin: 0 0 .5rem; font-size: .95rem; }
+.card .ex { font-family: var(--font-mono); font-size: .84rem; color: var(--muted); }
+
+.scale { margin: 1.4rem 0 .6rem; }
+.scale .bar { position: relative; height: 18px; border-radius: 999px; background: var(--shade); border: 1px solid var(--line); }
+.scale .band { position: absolute; top: -1px; bottom: -1px; border-radius: 999px; }
+.scale .zero { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--ink); left: 50%; }
+.band.neg { background: var(--pencil); }
+.band.fmt { background: color-mix(in srgb, var(--accent) 30%, var(--sheet)); }
+.band.sup { background: color-mix(in srgb, var(--accent) 50%, var(--sheet)); }
+.band.key { background: color-mix(in srgb, var(--accent) 72%, var(--sheet)); }
+.band.core { background: var(--accent); }
+.scale .ticks { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: .8rem; color: var(--muted); margin-top: .35rem; }
+.sw { display: inline-block; width: .85rem; height: .85rem; border-radius: 3px; vertical-align: -1px; margin-right: .45rem; }
+
+/* Practice */
+.practice { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: clamp(1.5rem, 3vw, 2.5rem); align-items: start; }
+.toolbar { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: 1rem; }
+.filter { border: 1.5px solid var(--line); background: var(--sheet); border-radius: 999px; padding: .32rem .8rem; font-size: .88rem; cursor: pointer; font-weight: 700; color: var(--muted); }
+.filter[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); }
+.scoreline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem; margin-bottom: .9rem; font-family: var(--font-mono); font-size: .85rem; color: var(--muted); }
+.scoreline b { color: var(--ink); }
+.qmap { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: 1rem; }
+.qdot {
+  width: 2.1rem; height: 2.1rem; border-radius: 8px; border: 1.5px solid var(--line); background: var(--sheet);
+  font-family: var(--font-mono); font-size: .78rem; cursor: pointer; color: var(--muted);
+}
+.qdot.right { border-color: var(--pass); color: var(--pass); background: var(--pass-tint); }
+.qdot.wrong { border-color: var(--pencil); color: var(--pencil); background: var(--pencil-tint); }
+.qdot.done { border-color: var(--accent); color: var(--accent); background: var(--accent-tint); }
+.qdot[aria-current="true"] { outline: 2.5px solid var(--ink); outline-offset: 1px; }
+
+.qcard { background: var(--sheet); border: 1px solid var(--line); border-radius: 16px; padding: clamp(1.1rem, 3vw, 1.7rem); }
+.qhead { display: flex; justify-content: space-between; gap: .8rem; align-items: center; margin-bottom: .8rem; flex-wrap: wrap; }
+.qhead .qn { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.qstem { font-family: var(--font-display); font-size: 1.32rem; font-weight: 600; line-height: 1.3; margin-bottom: .9rem; text-wrap: pretty; }
+.qcontext { margin: 0 0 1rem; }
+.qcontext .crit-box { font-family: var(--font-mono); font-size: .93rem; background: var(--shade); border: 1px solid var(--line); border-radius: 10px; padding: .75rem .9rem; }
+.opts { display: grid; gap: .55rem; }
+.opt {
+  display: grid; grid-template-columns: auto 1fr; gap: .75rem; align-items: start;
+  padding: .72rem .9rem; border: 1.5px solid var(--line); border-radius: 11px; cursor: pointer; background: var(--sheet);
+}
+.opt:hover { border-color: color-mix(in srgb, var(--ink) 35%, var(--line)); }
+.opt input { margin: .3rem 0 0; accent-color: var(--accent); width: 1.05rem; height: 1.05rem; }
+.opt.correct { border-color: var(--pass); background: var(--pass-tint); }
+.opt.wrong { border-color: var(--pencil); background: var(--pencil-tint); }
+.opt.missed { border-color: var(--pass); border-style: dashed; }
+.opt .mark { font-family: var(--font-mono); font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-left: .4rem; }
+.opt.correct .mark { color: var(--pass); }
+.opt.wrong .mark { color: var(--pencil); }
+.opt.missed .mark { color: var(--pass); }
+
+.labels { display: grid; gap: .6rem; }
+.label-item { display: grid; grid-template-columns: minmax(0, 1fr); gap: .45rem; padding: .7rem .85rem; border: 1.5px solid var(--line); border-radius: 11px; }
+.label-item .crit-cell { font-family: var(--font-mono); font-size: .9rem; }
+.label-item.correct { border-color: var(--pass); background: var(--pass-tint); }
+.label-item.wrong { border-color: var(--pencil); background: var(--pencil-tint); }
+.seg { display: flex; flex-wrap: wrap; gap: .35rem; }
+.seg button { border: 1.5px solid var(--line); background: var(--sheet); border-radius: 999px; padding: .28rem .75rem; font-size: .85rem; font-weight: 700; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--sheet); }
+.label-item .verdict { font-family: var(--font-mono); font-size: .78rem; }
+
+textarea {
+  width: 100%; min-height: 7.5rem; resize: vertical;
+  font-family: var(--font-mono); font-size: .95rem; line-height: 1.55;
+  background: var(--sheet); border: 1.5px solid var(--line); border-radius: 11px; padding: .8rem .9rem;
+}
+textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+
+.qactions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.1rem; align-items: center; }
+.feedback { margin-top: 1.1rem; border-radius: 12px; padding: .9rem 1rem; border: 1px solid var(--line); background: var(--shade); }
+.feedback.ok { background: var(--pass-tint); border-color: color-mix(in srgb, var(--pass) 35%, var(--line)); }
+.feedback.no { background: var(--pencil-tint); border-color: color-mix(in srgb, var(--pencil) 35%, var(--line)); }
+.feedback h4 { margin: 0 0 .3rem; font-family: var(--font-body); font-size: 1rem; }
+.feedback p:last-child { margin-bottom: 0; }
+.model { font-family: var(--font-mono); font-size: .93rem; background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: .75rem .9rem; margin: .5rem 0; }
+.selfcheck { margin: .6rem 0 0; padding-left: 1.1rem; }
+.qnav { display: flex; justify-content: space-between; gap: .6rem; margin-top: 1.2rem; flex-wrap: wrap; }
+
+.scenario { position: sticky; top: 4.2rem; background: var(--sheet); border: 1px solid var(--line); border-radius: 16px; padding: 1rem 1.1rem; font-size: .93rem; max-height: calc(100vh - 5.5rem); overflow: auto; }
+.scenario summary { cursor: pointer; font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; list-style: none; }
+.scenario summary::-webkit-details-marker { display: none; }
+.scenario summary::after { content: "\2013"; float: right; color: var(--muted); }
+.scenario:not([open]) summary::after { content: "+"; }
+.scenario .prompt { font-family: var(--font-mono); font-size: .82rem; line-height: 1.55; background: var(--shade); border-radius: 10px; padding: .7rem .8rem; margin: .8rem 0; }
+.scenario table { font-size: .82rem; table-layout: fixed; }
+.scenario th:nth-child(1) { width: 38%; }
+.scenario th:nth-child(2) { width: 24%; }
+.scenario td.rate { font-family: var(--font-mono); font-size: .76rem; font-variant-numeric: tabular-nums; }
+.scenario td .mono { color: var(--muted); font-size: .76rem; }
+.scenario th, .scenario td { padding: .35rem .4rem; }
+.scenario h4 { font-family: var(--font-body); font-size: .9rem; font-weight: 700; margin: .9rem 0 .2rem; }
+.scenario p { margin: 0 0 .4rem; }
+
+/* Checker */
+.checker { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 2.5rem); align-items: start; }
+.field { display: grid; gap: .35rem; margin-bottom: .9rem; }
+.field label { font-weight: 700; font-size: .92rem; }
+.row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
+input[type="number"], select {
+  width: 100%; background: var(--sheet); border: 1.5px solid var(--line); border-radius: 10px; padding: .55rem .7rem; font-size: .95rem;
+}
+.examples { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
+.examples button { border: 1.5px dashed var(--line); background: transparent; border-radius: 999px; padding: .3rem .75rem; font-size: .84rem; cursor: pointer; color: var(--muted); font-weight: 700; }
+.examples button:hover { border-color: var(--accent); color: var(--accent); }
+.result { background: var(--sheet); border: 1px solid var(--line); border-radius: 16px; padding: 1.2rem 1.3rem; }
+.result .marked { font-family: var(--font-mono); font-size: 1rem; line-height: 2.1rem; background-image: repeating-linear-gradient(to bottom, transparent 0 33px, color-mix(in srgb, var(--line) 70%, transparent) 33px 34px); padding: .2rem 0 .4rem; margin: .6rem 0 1rem; min-height: 2.2rem; word-break: break-word; }
+.verdict-line { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.findings { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+.findings li { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: .7rem; align-items: start; padding: .6rem .7rem; border-radius: 10px; background: var(--shade); font-size: .93rem; }
+.findings li .t { font-family: var(--font-mono); font-size: .75rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--pencil); padding-top: .15rem; }
+.findings li.info .t { color: var(--accent); }
+.findings li q { font-family: var(--font-mono); font-size: .88rem; quotes: "\201C" "\201D"; }
+
+/* Checklist */
+.checklist-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 2.5rem); align-items: start; }
+.checks { list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: .55rem; }
+.checks label { display: grid; grid-template-columns: auto 1fr; gap: .8rem; align-items: start; padding: .8rem .95rem; border: 1.5px solid var(--line); border-radius: 12px; background: var(--sheet); cursor: pointer; }
+.checks input { width: 1.2rem; height: 1.2rem; margin-top: .2rem; accent-color: var(--pass); }
+.checks .hint { display: block; color: var(--muted); font-size: .9rem; margin-top: .15rem; }
+.checks label.on { border-color: color-mix(in srgb, var(--pass) 45%, var(--line)); background: var(--pass-tint); }
+.meter { height: 8px; background: var(--shade); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+.meter span { display: block; height: 100%; background: var(--pass); width: 0; transition: width .25s ease; }
+.ready { margin-top: .8rem; font-weight: 700; color: var(--pass); }
+.quote { font-family: var(--font-display); font-size: 1.55rem; line-height: 1.3; font-weight: 600; margin: 0 0 1rem; }
+
+footer { border-top: 1px solid var(--line); padding: 1.4rem 0 2.2rem; color: var(--muted); font-size: .9rem; }
+
+@media (max-width: 920px) {
+  .hero .wrap, .practice, .checker, .checklist-grid { grid-template-columns: minmax(0, 1fr); }
+  .learn { grid-template-columns: minmax(0, 1fr); }
+  .lesson-nav { position: static; display: flex; overflow-x: auto; gap: .3rem; padding-bottom: .4rem; }
+  .lesson-nav button { grid-template-columns: auto auto; white-space: nowrap; border: 1.5px solid var(--line); }
+  .scenario { position: static; max-height: none; }
+  ol.flow { grid-template-columns: minmax(0, 1fr); }
+  ol.flow li:not(:last-child)::after { content: "\2193"; right: auto; left: 50%; top: auto; bottom: -1.05rem; transform: translateX(-50%); }
+}
+@media (max-width: 560px) {
+  .pair, .two, .row { grid-template-columns: minmax(0, 1fr); }
+  .findings li { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
+  .sheet { padding-left: 2.6rem; }
+  .sheet::before { left: 1.7rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand" href="#learn"><b>Rubric Lab</b><span>criterion &rarr; pass / fail</span></a>
+    <span class="chip muted">Self-study course</span>
+  </div>
+</header>
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+    <div>
+      <h1 id="hero-title">Write criteria any grader would mark the same way.</h1>
+      <p class="lede">Learn how strong AI-evaluation rubrics are built, then practice on a realistic planning task with instant feedback.</p>
+      <div class="stats"><span><b>10</b> lessons</span><span><b>24</b> practice questions</span><span><b>1</b> criterion checker</span></div>
+      <div class="actions">
+        <a class="btn" href="#lesson-1">Start lesson 1</a>
+        <a class="btn ghost" href="#practice">Go to practice</a>
+      </div>
+    </div>
+    <div class="sheet" aria-label="Example of a draft criterion marked up and rewritten">
+      <div class="tag">Draft criterion</div>
+      <p class="draft">The agenda picks a <mark class="flag">sensible</mark> venue for Friday dinner <mark class="flag">and</mark> stays under <mark class="flag">the cap in the policy manual</mark>.</p>
+      <div class="notes" aria-hidden="true">
+        <span class="hand">not objective</span>
+        <span class="hand">two checks</span>
+        <span class="hand">which cap?</span>
+      </div>
+      <div class="tag">Rewritten</div>
+      <div class="fixes">
+        <div class="fix"><span class="chip pass">Pass</span><span>The Friday dinner row is at Cedar Room (V04).</span></div>
+        <div class="fix"><span class="chip pass">Pass</span><span>The budget summary&rsquo;s total is $12,000 or less.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="tabbar">
+  <div class="wrap">
+    <div class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-learn" data-view="learn" aria-controls="view-learn">Learn<span class="count">10</span></button>
+      <button class="tab" role="tab" id="tab-practice" data-view="practice" aria-controls="view-practice">Practice<span class="count" id="practice-count">0/24</span></button>
+      <button class="tab" role="tab" id="tab-checker" data-view="checker" aria-controls="view-checker">Criterion checker</button>
+      <button class="tab" role="tab" id="tab-checklist" data-view="checklist" aria-controls="view-checklist">Final checklist<span class="count" id="check-count">0/7</span></button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section id="view-learn" class="view" role="tabpanel" aria-labelledby="tab-learn">
+    <div class="learn">
+      <nav class="lesson-nav" id="lesson-nav" aria-label="Lessons"></nav>
+      <article class="lesson" id="lesson" aria-live="polite"></article>
+    </div>
+  </section>
+
+  <section id="view-practice" class="view" role="tabpanel" aria-labelledby="tab-practice" hidden>
+    <div class="practice">
+      <div>
+        <div class="toolbar" id="filters" aria-label="Filter questions by topic"></div>
+        <div class="scoreline" id="scoreline"></div>
+        <div class="qmap" id="qmap" aria-label="Question map"></div>
+        <div class="qcard" id="qcard"></div>
+      </div>
+      <details class="scenario" open>
+        <summary>Practice scenario: Lake Arlen offsite</summary>
+        <div class="prompt">&ldquo;Plan a three-day offsite, Thursday Mar 12 to Saturday Mar 14, 2026, for a team of 8 at Lake Arlen. Use the attached venue list, team profile, policy manual and events calendar. Deliver a PDF named Offsite Agenda 2026 with each day on its own page. Every session, meal and transfer is its own row with time, venue, vendor ID, cost per person, party total, transport and notes. End with a budget summary for meals, activities, transport and lodging. Costs use the per-person rates multiplied by 8. Follow the policy manual on allergies, closures and the budget.&rdquo;</div>
+        <h4>Venue list</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Vendor</th><th>Rate</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">V01</span> Pinecrest Lodge</td><td class="rate">$210 pp per night</td><td>Lodging, 2 nights</td></tr>
+              <tr><td><span class="mono">V02</span> Harbor Hall</td><td class="rate">$85 pp</td><td>Meeting room. Closed Saturdays</td></tr>
+              <tr><td><span class="mono">V03</span> Lantern Grill</td><td class="rate">$64 pp</td><td>Steakhouse. Kitchen uses peanut oil</td></tr>
+              <tr><td><span class="mono">V04</span> Cedar Room</td><td class="rate">$72 pp</td><td>Dinner. Peanut-free kitchen</td></tr>
+              <tr><td><span class="mono">V05</span> Ridge Trail Guides</td><td class="rate">$48 pp</td><td>Guided hike. Minimum group 10</td></tr>
+              <tr><td><span class="mono">V06</span> Bluewater Kayak</td><td class="rate">$55 pp</td><td>Kayak tour. Minimum group 4</td></tr>
+              <tr><td><span class="mono">T01</span> Arlen Shuttle</td><td class="rate">$180 per trip</td><td>Seats 12</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Team profile</h4>
+        <p>8 people. Priya has a severe peanut allergy. Two team members are vegetarian. The team prefers active mornings.</p>
+        <h4>Policy manual</h4>
+        <p>Budget cap $12,000. No bookings on a venue&rsquo;s closure date. Confirm peanut-free preparation before booking any meal. Flag conflicts with a bold ALERT.</p>
+        <h4>Events calendar</h4>
+        <p>Sat Mar 14: Lake Arlen 10K. Shore Road closed 7am to noon. Detour via Hill Road, add 20 minutes.</p>
+      </details>
+    </div>
+  </section>
+
+  <section id="view-checker" class="view" role="tabpanel" aria-labelledby="tab-checker" hidden>
+    <div class="checker">
+      <div>
+        <h2>Criterion checker</h2>
+        <p class="note">Paste a draft criterion. The checker marks common red flags for each of the four tests and checks the weight against the label and category.</p>
+        <div class="field">
+          <label for="ck-text">Criterion</label>
+          <textarea id="ck-text" spellcheck="true"></textarea>
+        </div>
+        <div class="row">
+          <div class="field"><label for="ck-weight">Weight</label><input id="ck-weight" type="number" min="-100" max="100" step="5"></div>
+          <div class="field"><label for="ck-label">Source</label>
+            <select id="ck-label"><option>Explicit</option><option>Implicit</option></select></div>
+          <div class="field"><label for="ck-cat">Category</label>
+            <select id="ck-cat"><option>Formatting</option><option>Instruction following</option><option>Extraction</option><option>Reasoning</option></select></div>
+        </div>
+        <div class="field">
+          <span style="font-weight:700;font-size:.92rem">Try an example</span>
+          <div class="examples" id="ck-examples"></div>
+        </div>
+      </div>
+      <div class="result" aria-live="polite">
+        <div class="verdict-line" id="ck-verdict"></div>
+        <div class="marked" id="ck-marked"></div>
+        <ul class="findings" id="ck-findings"></ul>
+        <p class="note" style="margin-top:1rem">The checker spots wording patterns; it can&rsquo;t judge meaning. A clean result means &ldquo;re-read it once more,&rdquo; and a flagged &ldquo;and&rdquo; can be fine when both parts form one required item.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-checklist" class="view" role="tabpanel" aria-labelledby="tab-checklist" hidden>
+    <div class="checklist-grid">
+      <div>
+        <h2>Final checklist</h2>
+        <p class="note">Run these seven checks on the whole rubric before you submit it.</p>
+        <div class="meter" aria-hidden="true"><span id="meter-bar"></span></div>
+        <ul class="checks" id="checks"></ul>
+        <div class="qactions">
+          <button class="btn ghost small" id="checks-reset" type="button">Clear all checks</button>
+          <span class="ready" id="checks-ready" role="status"></span>
+        </div>
+      </div>
+      <aside class="card" style="padding:1.4rem 1.5rem">
+        <p class="quote">Good criteria can still add up to the wrong rubric.</p>
+        <p>Line-by-line review catches wording problems. This list catches what only shows when you read the rubric as a whole: duplicates, gaps, missing penalties and items a strong response could fail.</p>
+        <h4>Two stress tests</h4>
+        <ul style="padding-left:1.1rem;margin:0">
+          <li>Would a flawed response pass this criterion? Then it is too weak.</li>
+          <li>Would a good response that takes another valid route fail it? Then it is too narrow.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Practice scenarios and vendors are fictional. Rubric Lab is a study companion for writing and reviewing AI-evaluation rubrics.</div>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  /* ---------------- Lessons ---------------- */
+  const LESSONS = [
+    {
+      title: "How a rubric works",
+      html: `
+<p class="lede">A rubric is a list of statements a grader marks PASS or FAIL from the response alone. Each statement carries a weight, and the weighted results add up to the score.</p>
+<ol class="flow">
+  <li><b>Prompt + input files</b>Define what a strong response must contain</li>
+  <li><b>Critical elements</b>Specific, checkable outcomes the files settle</li>
+  <li><b>Criteria</b>One PASS/FAIL statement for each element</li>
+  <li><b>Weights</b>From &minus;100 to 100, set by importance</li>
+  <li><b>Graded response</b>Each criterion marked PASS or FAIL</li>
+</ol>
+<div class="rule"><b>Rule</b>Write the criteria from the prompt and files before you read any model response. The model never sees the rubric.</div>
+<h3>What a grader needs from every criterion</h3>
+<ul>
+  <li>A declarative statement that is either true or false about the response.</li>
+  <li>Every value, name or ID needed to decide, written into the criterion.</li>
+  <li>Evidence that is visible in the response itself.</li>
+</ul>
+<h3>Why rubrics get edited</h3>
+<p>On real projects you usually start from an auto-generated draft. Your job is to use domain knowledge to fix weak items and add checks that a flawed response would fail. Lessons 8 and 9 cover that review.</p>`
+    },
+    {
+      title: "Critical elements",
+      html: `
+<p class="lede">A critical element is a specific, checkable outcome the deliverable must contain, and one the prompt or its files settle.</p>
+<div class="rule"><b>Three questions</b>Is it asked for, directly or through a file the prompt points to? Can a grader check it? Do the prompt or files settle the right answer?</div>
+<div class="two">
+  <div class="side keep"><span class="chip info">Critical</span>
+    <ul>
+      <li>Each of the three days appears on its own page.<em>prompt</em></li>
+      <li>Harbor Hall (V02) is not booked on Saturday Mar 14.<em>venue list</em></li>
+      <li>Every cost is the per-person rate multiplied by 8.<em>prompt</em></li>
+    </ul>
+  </div>
+  <div class="side"><span class="chip muted">Not critical</span>
+    <ul>
+      <li>Includes at least two team-building games.<em>never asked</em></li>
+      <li>Compares venue prices with market rates.<em>outside data</em></li>
+      <li>Reads in an upbeat, welcoming tone.<em>subjective</em></li>
+    </ul>
+  </div>
+</div>
+<h3>Signs an element is not critical</h3>
+<ul>
+  <li>The prompt never asks for it, and no file requires it.</li>
+  <li>It needs information from outside the provided files, such as market prices or benchmarks.</li>
+  <li>It depends on taste: tone, style, how inspiring something feels.</li>
+  <li>It sets an arbitrary count the prompt never mentions, such as &ldquo;at least three dinners.&rdquo;</li>
+</ul>
+<p class="note">Examples across the course use one fictional task: a three-day offsite for 8 people at Lake Arlen. The Practice tab shows its full prompt and files.</p>`
+    },
+    {
+      title: "The four tests",
+      html: `
+<p class="lede">Every criterion must pass four tests. Each test catches a different way a grader could get stuck.</p>
+<section class="test">
+  <h3><span class="letter">A</span>Atomic</h3>
+  <p>The criterion checks exactly one thing, so a response can&rsquo;t half-pass it.</p>
+  <div class="pair">
+    <div class="side fail"><span class="chip fail">Fail</span><p class="crit">The agenda books a vegetarian lunch on day 1 and a peanut-free dinner on day 2.</p></div>
+    <div class="side pass"><span class="chip pass">Pass</span><p class="crit">The day 1 lunch row is at a venue with a vegetarian menu.</p><p class="crit">The day 2 dinner row notes peanut-free preparation.</p></div>
+  </div>
+  <p class="flags">Red flags: <code>and</code><code>or</code><code>respectively</code><code>as well as</code><code>;</code></p>
+  <p class="note">A list that completes one required item stays atomic: &ldquo;The Saturday transfer note states the Shore Road closure, the Hill Road detour and the 20 added minutes.&rdquo;</p>
+</section>
+<section class="test">
+  <h3><span class="letter">S</span>Self-contained</h3>
+  <p>A grader can decide without opening another file, because the value, name or ID is in the criterion.</p>
+  <div class="pair">
+    <div class="side fail"><span class="chip fail">Fail</span><p class="crit">The budget summary stays under the cap set in the policy manual.</p></div>
+    <div class="side pass"><span class="chip pass">Pass</span><p class="crit">The budget summary&rsquo;s total is $12,000 or less.</p></div>
+  </div>
+  <p class="flags">Red flags: <code>stated in the</code><code>per the manual</code><code>the cap</code><code>plus $480</code></p>
+</section>
+<section class="test">
+  <h3><span class="letter">O</span>Objective</h3>
+  <p>Two graders reading the same response reach the same verdict.</p>
+  <div class="pair">
+    <div class="side fail"><span class="chip fail">Fail</span><p class="crit">The agenda picks a sensible venue for the Friday dinner.</p></div>
+    <div class="side pass"><span class="chip pass">Pass</span><p class="crit">The Friday dinner row is at Cedar Room (V04).</p></div>
+  </div>
+  <p class="flags">Red flags: <code>sensible</code><code>appropriate</code><code>good</code><code>accurate</code><code>affordable</code></p>
+</section>
+<section class="test">
+  <h3><span class="letter">V</span>Verifiable</h3>
+  <p>The evidence is visible in the response. A grader can&rsquo;t see what the model thought or anything done offline.</p>
+  <div class="pair">
+    <div class="side fail"><span class="chip fail">Fail</span><p class="crit">The model took Priya&rsquo;s peanut allergy into account.</p><p class="crit">The planner phoned Cedar Room to confirm the menu.</p></div>
+    <div class="side pass"><span class="chip pass">Pass</span><p class="crit">Every dinner row notes peanut-free preparation.</p></div>
+  </div>
+  <p class="flags">Red flags: <code>considered</code><code>understands</code><code>took into account</code><code>phoned</code></p>
+</section>`
+    },
+    {
+      title: "Explicit or implicit",
+      html: `
+<p class="lede">Explicit means you can point to the line in the prompt that asks for it. Facts found in the files and expert judgment are implicit.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Criterion</th><th>Label</th><th>Where it comes from</th></tr></thead>
+  <tbody>
+    <tr><td><span class="crit-cell">The file is a PDF named Offsite Agenda 2026.</span></td><td>Explicit</td><td>Named in the prompt</td></tr>
+    <tr><td><span class="crit-cell">Each day appears on its own page.</span></td><td>Explicit</td><td>Required by the prompt</td></tr>
+    <tr><td><span class="crit-cell">Harbor Hall (V02) is not booked on Saturday Mar 14.</span></td><td>Implicit</td><td>Closure in the venue list</td></tr>
+    <tr><td><span class="crit-cell">Every Saturday morning transfer notes the Hill Road detour.</span></td><td>Implicit</td><td>Events calendar</td></tr>
+    <tr><td><span class="crit-cell">No meal is booked at Lantern Grill (V03).</span></td><td>Implicit</td><td>Team profile and venue list</td></tr>
+  </tbody>
+</table></div>
+<div class="rule"><b>Trap</b>Specific is not the same as explicit. Naming a vendor ID or a date does not make a criterion explicit when the prompt never mentions it.</div>
+<h3>General rules and specific findings</h3>
+<p>When the prompt states a general rule, such as &ldquo;follow the policy manual on closures,&rdquo; the rule is explicit. Each specific finding you apply it to, such as Harbor Hall&rsquo;s Saturday closure, is implicit.</p>
+<h3>Stay consistent</h3>
+<p>Label the same kind of item the same way. If a closure date from the venue list is implicit, a road closure from the events calendar is implicit too.</p>`
+    },
+    {
+      title: "Categories",
+      html: `
+<p class="lede">The category names the skill a criterion tests. Most rubrics use four.</p>
+<div class="cards">
+  <div class="card"><h4>Formatting</h4><p>Is the deliverable the right shape: file type, length, page structure?</p><p class="ex">Each day appears on its own page.</p></div>
+  <div class="card"><h4>Instruction following</h4><p>Did the response do what the prompt told it to do?</p><p class="ex">The agenda uses only venues from the venue list.</p></div>
+  <div class="card"><h4>Extraction</h4><p>Did it copy the right value straight from a file?</p><p class="ex">The lodging row states Pinecrest Lodge&rsquo;s rate of $210 per person per night.</p></div>
+  <div class="card"><h4>Reasoning</h4><p>Did it work the answer out: calculate, reconcile or judge?</p><p class="ex">The budget summary states a lodging total of $3,360 for two nights.</p></div>
+</div>
+<div class="rule"><b>Tie-breakers</b>Copied straight from a file: Extraction. Calculated, reconciled or chosen between sources: Reasoning. Layout, file type, length or page count: Formatting. A rule the prompt sets for the work: Instruction following.</div>
+<p class="note">The lodging total is Reasoning because it is calculated: $210 &times; 8 people &times; 2 nights = $3,360.</p>`
+    },
+    {
+      title: "Weights and penalties",
+      html: `
+<p class="lede">A weight says how much a criterion counts relative to the others. This course uses a scale from &minus;100 to 100.</p>
+<div class="scale" role="img" aria-label="Weight scale from minus 100 to 100. Active mistakes sit from minus 90 to minus 30. Formatting sits from 10 to 25, supporting details from 25 to 40, key figures from 40 to 70, core and safety checks from 80 to 100.">
+  <div class="bar">
+    <span class="band neg" style="left:5%;width:30%"></span>
+    <span class="band fmt" style="left:55%;width:7.5%"></span>
+    <span class="band sup" style="left:62.5%;width:7.5%"></span>
+    <span class="band key" style="left:70%;width:15%"></span>
+    <span class="band core" style="left:90%;width:10%"></span>
+    <span class="zero"></span>
+  </div>
+  <div class="ticks"><span>&minus;100</span><span>0</span><span>100</span></div>
+</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Range</th><th>Use it for</th></tr></thead>
+  <tbody>
+    <tr><td class="num"><span class="sw" style="background:var(--accent)"></span>80 to 100</td><td>Core conclusions and safety-critical checks</td></tr>
+    <tr><td class="num"><span class="sw" style="background:color-mix(in srgb, var(--accent) 72%, var(--sheet))"></span>40 to 70</td><td>Key figures, calculations and important judgment calls</td></tr>
+    <tr><td class="num"><span class="sw" style="background:color-mix(in srgb, var(--accent) 50%, var(--sheet))"></span>25 to 40</td><td>Supporting details</td></tr>
+    <tr><td class="num"><span class="sw" style="background:color-mix(in srgb, var(--accent) 30%, var(--sheet))"></span>10 to 25</td><td>Formatting and filename checks</td></tr>
+    <tr><td class="num"><span class="sw" style="background:var(--pencil)"></span>&minus;30 to &minus;90</td><td>Active mistakes, up to five negative criteria per rubric</td></tr>
+  </tbody>
+</table></div>
+<h3>Rules that hold everywhere</h3>
+<ul>
+  <li>Spread the weights. A rubric with everything at 75 ranks nothing.</li>
+  <li>Formatting never outranks the analysis.</li>
+  <li>A negative criterion describes the mistake, so the statement is true when the response goes wrong: &ldquo;A meal row books Lantern Grill (V03).&rdquo;</li>
+  <li>Keep a judgment-call penalty below the core criterion it could cancel: &minus;50, not &minus;80, against a +90 core requirement.</li>
+  <li>A severe safety risk can justify &minus;90, such as booking a peanut-oil kitchen for a guest with a severe peanut allergy.</li>
+  <li>When you split a criterion, divide its weight so the total stays the same: &minus;40 becomes &minus;20 and &minus;20.</li>
+</ul>`
+    },
+    {
+      title: "Rationales",
+      html: `
+<p class="lede">A rationale explains why the criterion exists and cites the evidence behind it.</p>
+<div class="pair">
+  <div class="side pass"><span class="chip pass">Pass</span>
+    <p class="crit">Harbor Hall (V02) is not booked on Saturday Mar 14.</p>
+    <p style="margin:.6rem 0 0;font-size:.95rem"><b>Rationale:</b> The venue list marks Harbor Hall closed on Saturdays, and the policy manual forbids bookings on closure dates.</p>
+  </div>
+  <div class="side fail"><span class="chip fail">Fail</span>
+    <p class="crit">The budget summary&rsquo;s total is $12,000 or less.</p>
+    <p style="margin:.6rem 0 0;font-size:.95rem"><b>Rationale:</b> Checks the requirement to document assumptions.</p>
+    <p class="note" style="margin:.4rem 0 0">This rationale describes a different criterion.</p>
+  </div>
+</div>
+<h3>A good rationale</h3>
+<ul>
+  <li>Names the source: the prompt line or the file.</li>
+  <li>Says why the check matters for this task.</li>
+  <li>Describes this criterion only, not its neighbor in the list.</li>
+  <li>Agrees with the criterion&rsquo;s label and category.</li>
+</ul>`
+    },
+    {
+      title: "Auditing a rubric",
+      html: `
+<p class="lede">Read every generated criterion before you edit anything, then sort what you find into three groups.</p>
+<div class="cards">
+  <div class="card"><h4>Wording</h4><ul style="padding-left:1.1rem;margin:0">
+    <li>Typos and unclear phrasing</li><li>Values that aren&rsquo;t stated</li><li>Two checks in one criterion</li><li>Judgment words</li><li>Thought process instead of output</li></ul></div>
+  <div class="card"><h4>Labels and weights</h4><ul style="padding-left:1.1rem;margin:0">
+    <li>Wrong explicit or implicit label</li><li>Wrong category</li><li>Missing weight</li><li>Weights clustered at one value</li><li>Rationale for a different criterion</li></ul></div>
+  <div class="card"><h4>Coverage</h4><ul style="padding-left:1.1rem;margin:0">
+    <li>Duplicate or overlapping criteria</li><li>Missing expert checks</li><li>No negatives for active mistakes</li><li>Criteria a good response could fail</li></ul></div>
+</div>
+<div class="rule"><b>Two stress tests</b>Would a flawed response pass this criterion? Then it is too weak. Would a good response that takes another valid route fail it? Then it is too narrow.</div>
+<h3>Flag what is wrong, not what you would phrase differently</h3>
+<p>A clean, well-weighted criterion needs no edit. Audits are scored on the real defects you find, so a long list of style preferences adds noise.</p>
+<h3>Common expert checks generators miss</h3>
+<ul>
+  <li>Excluding duplicate, closed, cancelled or scenario-only records.</li>
+  <li>Flagging missing data instead of inventing it.</li>
+  <li>Penalties for outside data, unsafe bookings and double counting.</li>
+</ul>`
+    },
+    {
+      title: "Reviewer feedback",
+      html: `
+<p class="lede">Answer each reviewer note with the smallest fix that resolves it, and push back with evidence when the note is wrong.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Reviewer says</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td><b>Not atomic</b></td><td>Split it into separate criteria and divide the weight, so &minus;40 becomes &minus;20 and &minus;20.</td></tr>
+    <tr><td><b>Redundant</b></td><td>Delete the weaker duplicate and keep the complete check.</td></tr>
+    <tr><td><b>Wrong category</b></td><td>Fix the label. A page or slide limit is Formatting.</td></tr>
+    <tr><td><b>Weight missing</b></td><td>Set it by importance, using the same scale as the rest of the rubric.</td></tr>
+    <tr><td><b>Penalty too large</b></td><td>Lower it below the core criterion it could cancel.</td></tr>
+    <tr><td><b>Redundant</b>, when it isn&rsquo;t</td><td>Keep both and show a response that passes one and fails the other.</td></tr>
+  </tbody>
+</table></div>
+<h3>Example of pushing back</h3>
+<div class="pair">
+  <div class="side"><p class="crit" style="margin-top:0">Each activity row names a specific venue.</p><p class="crit">Every activity venue is in Lake Arlen.</p></div>
+  <div class="side keep"><p style="margin:0;font-size:.95rem">&ldquo;A lakeside caf&eacute;&rdquo; passes the second check and fails the first. A named venue in another town passes the first and fails the second. They check different things, so keep both.</p></div>
+</div>`
+    },
+    {
+      title: "Cheat sheet",
+      html: `
+<p class="lede">Everything from the course on one page.</p>
+<div class="cards">
+  <div class="card"><h4>Four tests</h4><p><b>Atomic:</b> one check. <b>Self-contained:</b> the value is in it. <b>Objective:</b> no judgment words. <b>Verifiable:</b> visible in the response.</p></div>
+  <div class="card"><h4>Labels</h4><p><b>Explicit:</b> traceable to a line in the prompt. <b>Implicit:</b> a finding from the files or expert judgment. Specific is not explicit.</p></div>
+  <div class="card"><h4>Categories</h4><p>Copied: Extraction. Calculated or chosen: Reasoning. Shape and length: Formatting. A prompt rule: Instruction following.</p></div>
+  <div class="card"><h4>Weights</h4><p>Core and safety 80&ndash;100. Key figures 40&ndash;70. Formatting 10&ndash;25. Mistakes &minus;30 to &minus;90, five at most.</p></div>
+</div>
+<h3>Red-flag words</h3>
+<p class="flags"><code>and</code><code>respectively</code><code>as stated in</code><code>the cap</code><code>sensible</code><code>appropriate</code><code>accurate</code><code>considered</code><code>understands</code><code>took into account</code></p>
+<p>Before you submit, run the <a href="#checklist">final checklist</a>, and test any draft in the <a href="#checker">criterion checker</a>.</p>`
+    }
+  ];
+
+  /* ---------------- Questions ---------------- */
+  const TESTS = ["Atomic", "Self-contained", "Objective", "Verifiable"];
+  const testOpts = (right) => TESTS.map((t) => ({ t, ok: t === right }));
+
+  const QUESTIONS = [
+    { id: "q1", topic: "basics", type: "single",
+      stem: "Where do a rubric&rsquo;s criteria come from?",
+      options: [
+        { t: "A strong model response, so graders know what good looks like" },
+        { t: "The prompt and its input files", ok: true },
+        { t: "The weights, which you set first" },
+        { t: "The model, which sees the rubric before it answers" }
+      ],
+      explain: "Critical elements come from the prompt and the files, and each becomes a criterion with a weight. You write them before reading any response, and the model never sees them." },
+    { id: "q2", topic: "basics", type: "multi",
+      stem: "Which of these are critical elements for the offsite task? Select all that apply.",
+      options: [
+        { t: "Each of the three days appears on its own page.", ok: true },
+        { t: "The agenda includes at least two team-building games." },
+        { t: "Harbor Hall (V02) is not booked on Saturday Mar 14.", ok: true },
+        { t: "The agenda reads in an upbeat, welcoming tone." },
+        { t: "Every cost is the per-person rate multiplied by 8.", ok: true },
+        { t: "Venue prices are compared with current market rates." }
+      ],
+      explain: "The page rule and the cost rule come from the prompt, and the venue list settles Harbor Hall&rsquo;s Saturday closure. Games were never asked for, tone is subjective, and market rates need outside data." },
+    { id: "q3", topic: "basics", type: "single",
+      stem: "What makes an outcome a critical element?",
+      options: [
+        { t: "Anything a strong response might reasonably include" },
+        { t: "Anything a reviewer is likely to look at" },
+        { t: "Any requirement that contains a number" },
+        { t: "A specific, checkable outcome the deliverable must contain, settled by the prompt or files", ok: true }
+      ],
+      explain: "Critical elements are required and checkable, and the reference material settles them. Nice-to-haves, reviewer guesses and arbitrary numbers don&rsquo;t qualify." },
+    { id: "q4", topic: "tests", type: "single",
+      context: "Every Saturday transfer row notes the Hill Road detour, and the Friday dinner is booked at Cedar Room (V04).",
+      stem: "Which test does this draft fail?", options: testOpts("Atomic"),
+      explain: "Two unrelated checks share one sentence. A response could pass one and fail the other, so split them into two criteria." },
+    { id: "q5", topic: "tests", type: "single",
+      context: "The budget summary stays under the cap set in the policy manual.",
+      stem: "Which test does this draft fail?", options: testOpts("Self-contained"),
+      explain: "The grader would have to open the policy manual to learn the cap. Write the value in: &ldquo;The budget summary&rsquo;s total is $12,000 or less.&rdquo;" },
+    { id: "q6", topic: "tests", type: "single",
+      context: "The agenda picks a sensible venue for the Friday dinner.",
+      stem: "Which test does this draft fail?", options: testOpts("Objective"),
+      explain: "&ldquo;Sensible&rdquo; is a judgment two graders could disagree on. Name the fact instead: &ldquo;The Friday dinner row is at Cedar Room (V04).&rdquo;" },
+    { id: "q7", topic: "tests", type: "single",
+      context: "The model took Priya&rsquo;s peanut allergy into account when planning meals.",
+      stem: "Which test does this draft fail?", options: testOpts("Verifiable"),
+      explain: "A grader can&rsquo;t see what the model took into account. Check what the response shows: &ldquo;Every dinner row notes peanut-free preparation.&rdquo;" },
+    { id: "q8", topic: "tests", type: "single",
+      context: "The planner phoned Cedar Room and confirmed the kitchen is peanut-free.",
+      stem: "Which test does this draft fail?", options: testOpts("Verifiable"),
+      explain: "A phone call happens outside the response, and an AI writing a PDF can&rsquo;t make one. The criterion can never be checked from the deliverable." },
+    { id: "q9", topic: "tests", type: "single",
+      stem: "Bluewater Kayak (V06) lists $55 per person. Which criterion best verifies the kayak tour&rsquo;s cost?",
+      options: [
+        { t: "The kayak row shows accurate pricing for the group." },
+        { t: "The kayak row lists $55 as the cost of the activity." },
+        { t: "The kayak row shows $55 per person and a party total of $440.", ok: true },
+        { t: "The kayak tour is affordable for the team." }
+      ],
+      explain: "$55 &times; 8 = $440. Only this option states the rate and the total, so a grader can confirm the calculation. The $55-only version would pass a row that wrongly shows $55 as the party total." },
+    { id: "q10", topic: "tests", type: "single",
+      stem: "Which draft passes all four tests?",
+      options: [
+        { t: "The agenda handles the Lake Arlen 10K sensibly." },
+        { t: "The model knew about the Saturday road closure." },
+        { t: "The transfer notes mention the closure listed in the events calendar." },
+        { t: "Every Saturday transfer row before noon states that Shore Road is closed 7am to noon and adds the 20-minute Hill Road detour.", ok: true }
+      ],
+      explain: "It names the road, the hours, the detour and the added time, so a grader can check each transfer row without the calendar. The closure note is one required item. The others fail Objective, Verifiable and Self-contained." },
+    { id: "q11", topic: "labels", type: "label",
+      stem: "Label each criterion Explicit or Implicit.",
+      choices: ["Explicit", "Implicit"],
+      items: [
+        { t: "The file is a PDF named Offsite Agenda 2026.", a: "Explicit" },
+        { t: "Each day appears on its own page.", a: "Explicit" },
+        { t: "Harbor Hall (V02) is not booked on Saturday Mar 14.", a: "Implicit" },
+        { t: "Every Saturday morning transfer notes the Hill Road detour.", a: "Implicit" },
+        { t: "No meal is booked at Lantern Grill (V03).", a: "Implicit" }
+      ],
+      explain: "The filename and the page rule trace to lines in the prompt. The closure, the detour and the peanut-oil kitchen are facts found in the files, so they are implicit however specific they are." },
+    { id: "q12", topic: "labels", type: "single",
+      context: "Harbor Hall (V02) is booked on Saturday Mar 14.  &middot;  &minus;85  &middot;  Implicit",
+      stem: "A teammate wants this labeled Explicit because it names a vendor ID and a date. Who is right?",
+      options: [
+        { t: "The teammate: an ID and a date make a criterion explicit" },
+        { t: "Neither: negative criteria don&rsquo;t take a label" },
+        { t: "It depends on the weight" },
+        { t: "Implicit is right: the prompt never names Harbor Hall, and the closure comes from the venue list", ok: true }
+      ],
+      explain: "Explicit means traceable to a line in the prompt. Specific details from the files make a criterion precise, not explicit." },
+    { id: "q13", topic: "labels", type: "label",
+      stem: "Assign each criterion to a category.",
+      choices: ["Formatting", "Instruction following", "Extraction", "Reasoning"],
+      items: [
+        { t: "The agenda is delivered as a PDF.", a: "Formatting" },
+        { t: "The agenda uses only venues from the venue list.", a: "Instruction following" },
+        { t: "The lodging row states Pinecrest Lodge&rsquo;s rate of $210 per person per night.", a: "Extraction" },
+        { t: "The budget summary states a lodging total of $3,360 for two nights.", a: "Reasoning" },
+        { t: "The transport line shows 4 shuttle trips at $180 each, $720 in total.", a: "Reasoning" }
+      ],
+      explain: "File type is Formatting. A rule the prompt sets is Instruction following. A value copied from a file is Extraction. Calculations are Reasoning: $210 &times; 8 &times; 2 = $3,360 and 4 &times; $180 = $720." },
+    { id: "q14", topic: "weights", type: "single",
+      context: "i. The PDF is named Offsite Agenda 2026.<br>ii. Every Saturday transfer row before noon notes the Hill Road detour and 20 added minutes.<br>iii. A meal row books Lantern Grill (V03).",
+      stem: "Which set of weights fits best?",
+      options: [
+        { t: "i = 75, ii = 20, iii = &minus;90" },
+        { t: "i = 20, ii = 75, iii = &minus;90", ok: true },
+        { t: "i = 20, ii = 75, iii = 60" },
+        { t: "i = 50, ii = 50, iii = 50" }
+      ],
+      explain: "The filename is a formatting check, so it stays low. The detour note is substantive logistics. Booking Lantern Grill puts a guest with a severe peanut allergy at risk, so it needs a large negative weight." },
+    { id: "q15", topic: "weights", type: "single",
+      context: "Criterion 1: The plan schedules weekly runs that build to a 10K race.  &middot;  +90  &middot;  Explicit<br>Criterion 9: The plan schedules a 10K run before week 5.  &middot;  &minus;80  &middot;  Implicit<br><br>Reviewer: &ldquo;One judgment-call penalty nearly cancels the core requirement.&rdquo;",
+      stem: "How do you respond?",
+      options: [
+        { t: "Keep &minus;80: an unsafe ramp is a serious risk" },
+        { t: "Raise it to &minus;90 so it fully offsets criterion 1" },
+        { t: "Lower it to about &minus;50, so it still discourages the unsafe ramp without dominating the score", ok: true },
+        { t: "Delete criterion 9" }
+      ],
+      explain: "The penalty should stay clearly below the core explicit criterion. Deleting it loses a useful safety check." },
+    { id: "q16", topic: "weights", type: "single",
+      stem: "Which statement about negative criteria is correct?",
+      options: [
+        { t: "A negative criterion describes a mistake, so when it is true, points are deducted.", ok: true },
+        { t: "A negative criterion describes the desired behavior and carries a minus sign." },
+        { t: "Every positive criterion needs a matching negative one." },
+        { t: "Negative weights are only for formatting errors." }
+      ],
+      explain: "Write the mistake itself, such as &ldquo;A meal row books Lantern Grill (V03).&rdquo; Use negatives for ways a response can actively go wrong, five at most." },
+    { id: "q17", topic: "review", type: "multi",
+      context: `<div class="table-wrap" style="margin:0"><table>
+<thead><tr><th>#</th><th>Criterion</th><th>Weight</th><th>Label</th><th>Category</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>The PDF is named Offsite Agenda 2026.</td><td class="num">20</td><td>Explicit</td><td>Formatting</td></tr>
+<tr><td>2</td><td>The agenda mentions plus $480 to the activities line.</td><td class="num">40</td><td>Implicit</td><td>Reasoning</td></tr>
+<tr><td>3</td><td>Each day appears on its own page.</td><td class="num">20</td><td>Explicit</td><td>Instruction following</td></tr>
+<tr><td>4</td><td>The kayak row shows $55 per person and a party total of $440.</td><td class="num">45</td><td>Implicit</td><td>Reasoning</td></tr>
+<tr><td>5</td><td>The agenda shows awareness of the venue closures.</td><td class="num">60</td><td>Implicit</td><td>Reasoning</td></tr>
+<tr><td>6</td><td>The Friday dinner row is at Cedar Room (V04).</td><td class="num"></td><td>Implicit</td><td>Reasoning</td></tr>
+<tr><td>7</td><td>The Friday dinner is booked at Cedar Room (V04).</td><td class="num">50</td><td>Implicit</td><td>Reasoning</td></tr>
+</tbody></table></div>`,
+      stem: "Which criteria need editing? Select all that apply.",
+      options: [
+        { t: "1" }, { t: "2", ok: true }, { t: "3", ok: true }, { t: "4" },
+        { t: "5", ok: true }, { t: "6", ok: true }, { t: "7", ok: true }
+      ],
+      explain: "2 never says what &ldquo;plus $480&rdquo; is (not self-contained). 3 is a page-structure check, so its category is Formatting. 5 is vague and not verifiable. 6 has no weight. 7 duplicates 6, so delete it. 1 and 4 are fine." },
+    { id: "q18", topic: "review", type: "multi",
+      context: "1. Harbor Hall (V02) is booked on Saturday Mar 14.  &middot;  &minus;85  &middot;  Explicit<br>2. Each of the three days appears on its own page.  &middot;  +60  &middot;  Explicit<br>3. Every Saturday transfer row before noon notes 20 added minutes for the Hill Road detour.  &middot;  +75  &middot;  Implicit",
+      stem: "Which edits would you make? Select all that apply.",
+      options: [
+        { t: "Change criterion 1 to Implicit", ok: true },
+        { t: "Lower criterion 2&rsquo;s weight to about +20", ok: true },
+        { t: "Change criterion 3 to Explicit" },
+        { t: "Make no changes" }
+      ],
+      explain: "The closure comes from the venue list, so criterion 1 is implicit. A page-structure check is formatting and belongs near +20. Criterion 3 is correctly implicit: the 20 minutes come from the events calendar." },
+    { id: "q19", topic: "review", type: "single",
+      context: "A meal row books Lantern Grill (V03) or lists a peanut dish for Priya.  &middot;  &minus;40<br><br>Reviewer: &ldquo;Not atomic. It checks two separate conditions.&rdquo;",
+      stem: "What will you do?",
+      options: [
+        { t: "Keep it, because both conditions relate to the allergy, but lower the weight to &minus;20" },
+        { t: "Rewrite it as &ldquo;Meals accommodate Priya&rsquo;s allergy&rdquo; at &minus;40" },
+        { t: "Split it: &ldquo;A meal row books Lantern Grill (V03)&rdquo; at &minus;20 and &ldquo;A meal row lists a dish containing peanuts for Priya&rdquo; at &minus;20", ok: true },
+        { t: "Split it: &ldquo;A meal row books an unsafe restaurant&rdquo; at &minus;20 and &ldquo;A meal row lists a peanut dish for Priya&rdquo; at &minus;20" }
+      ],
+      explain: "The split gives two atomic, objective checks and keeps the total penalty at &minus;40. The rewrite is vague and puts a negative weight on a desired behavior. &ldquo;Unsafe restaurant&rdquo; is a judgment." },
+    { id: "q20", topic: "review", type: "single",
+      context: "Criterion 4: Each activity row names a specific venue.<br>Criterion 5: Every activity venue is in Lake Arlen.<br><br>Reviewer: &ldquo;Redundant. Both check the location, so merge them.&rdquo;",
+      stem: "How do you respond?",
+      options: [
+        { t: "Merge them into one criterion" },
+        { t: "Keep both and explain that they check different things", ok: true },
+        { t: "Delete criterion 5" },
+        { t: "Keep both but lower criterion 5&rsquo;s weight" }
+      ],
+      explain: "&ldquo;A lakeside caf&eacute;&rdquo; passes 5 and fails 4. A named venue in another town passes 4 and fails 5. Each can fail on its own, so they are not redundant." },
+    { id: "q21", topic: "review", type: "multi",
+      stem: "Which checks belong on the final whole-rubric checklist? Select all that apply.",
+      options: [
+        { t: "No two criteria check the same thing", ok: true },
+        { t: "Weights add up to exactly 100" },
+        { t: "Every rationale matches its criterion", ok: true },
+        { t: "Every criterion is explicit" },
+        { t: "No good response could fail this rubric", ok: true },
+        { t: "A negative criterion covers each way a response could actively go wrong, five at most", ok: true }
+      ],
+      explain: "Weights don&rsquo;t need to sum to a set number, and implicit criteria are expected in any strong rubric." },
+    { id: "q22", topic: "writing", type: "write",
+      stem: "Write the criterion for this element: the Saturday Mar 14 Lake Arlen 10K closure is flagged on every Saturday transfer before noon, with the detour and the added time.",
+      model: "Every Saturday Mar 14 transfer row before noon states that Shore Road is closed from 7am to noon for the Lake Arlen 10K and that the shuttle detours via Hill Road with 20 minutes added.",
+      checks: ["States the road, the hours and the event", "Gives the detour and the added minutes", "Says which rows: every Saturday transfer before noon", "Can be graded without opening the events calendar"] },
+    { id: "q23", topic: "writing", type: "write",
+      stem: "Write the criterion that covers Priya&rsquo;s severe peanut allergy and Lantern Grill (V03), whose kitchen uses peanut oil.",
+      model: "Lantern Grill (V03) is not booked for any meal, because its kitchen uses peanut oil and Priya has a severe peanut allergy.",
+      alt: "As a negative criterion: &ldquo;A meal row books Lantern Grill (V03).&rdquo; Weight &minus;90.",
+      checks: ["Names the vendor and its ID", "Checks one thing: whether V03 appears", "States the reason, so no file is needed", "Uses a large penalty if written as a negative"] },
+    { id: "q24", topic: "writing", type: "write",
+      stem: "Ridge Trail Guides (V05) needs a minimum group of 10, and the team has 8. Write the criterion.",
+      model: "Ridge Trail Guides (V05) is not booked, because its minimum group of 10 is larger than the team of 8.",
+      checks: ["Names the vendor and its ID", "States both numbers: the minimum of 10 and the team of 8", "Checks one thing: whether V05 is booked"] }
+  ];
+
+  const TOPICS = [
+    { id: "all", label: "All" },
+    { id: "basics", label: "Basics" },
+    { id: "tests", label: "Four tests" },
+    { id: "labels", label: "Labels and categories" },
+    { id: "weights", label: "Weights" },
+    { id: "review", label: "Audit and feedback" },
+    { id: "writing", label: "Writing" }
+  ];
+
+  const CHECKS = [
+    { t: "Every criterion checks exactly one thing", h: "Look for and, or, respectively and semicolons." },
+    { t: "No two criteria check the same thing", h: "Compare criteria that mention the same vendor, value or day." },
+    { t: "Weights are filled in, and nothing formatting-only outranks the analysis", h: "Formatting sits around 10 to 25. Core and safety checks sit highest." },
+    { t: "Every rationale matches its criterion", h: "Read each rationale against its own criterion, not the one above it." },
+    { t: "No obvious expert check is missing", h: "Think safety, money, dates, exclusions and missing data." },
+    { t: "A negative criterion exists for each way a response could actively go wrong (max 5)", h: "Outside data, unsafe bookings, double counting, scenario items treated as fact." },
+    { t: "No good response could fail this rubric", h: "Picture a strong response that takes a different valid route." }
+  ];
+
+  const EXAMPLES = [
+    { name: "Bundled draft", text: "The agenda picks a sensible venue for Friday dinner and stays under the cap in the policy manual.", weight: 60, label: "Implicit", cat: "Reasoning" },
+    { name: "Thought process", text: "The model took Priya's peanut allergy into account when planning meals.", weight: 50, label: "Implicit", cat: "Reasoning" },
+    { name: "Overweighted format", text: "Each day appears on its own page.", weight: 60, label: "Explicit", cat: "Formatting" },
+    { name: "Inverted penalty", text: "The agenda does not book Lantern Grill (V03).", weight: -90, label: "Implicit", cat: "Reasoning" },
+    { name: "Clean penalty", text: "A meal row books Lantern Grill (V03).", weight: -90, label: "Implicit", cat: "Reasoning" }
+  ];
+
+  /* ---------------- Lint ---------------- */
+  const RULES = [
+    { test: "Atomic", re: /\b(and|respectively|as well as|along with|in addition to|both)\b/gi,
+      note: "Joins two checks? Split them, unless both parts form one required item." },
+    { test: "Atomic", re: /\bor\b(?!\s+(?:less|more|fewer|greater|later|earlier|above|below|lower|higher))/gi,
+      note: "“Or” can hide two conditions. Split them, unless they are examples of one condition." },
+    { test: "Atomic", re: /;/g, note: "A semicolon usually separates two checks." },
+    { test: "Self-contained", re: /\b(?:stated|listed|given|specified|defined|set|described|noted|shown|found)\s+(?:in|by)\s+the\b[^.,;]*|\b(?:in|from|per)\s+the\s+(?:notes|manual|policy manual|file|files|profile|calendar|events calendar|directory|list|venue list|policy|prompt|document|spreadsheet|statement|template)\b|\bas\s+(?:required|specified|stated|instructed)\b|\bthe\s+(?:required|specified|correct|right|expected)\s+(?:amount|value|number|total|rate|date|time|vendor|venue|figure)\b|\bplus\s+\$[\d,]+|\bthe\s+(?:cap|minimum|maximum|limit|threshold|target)\b/gi,
+      note: "Points somewhere else instead of stating the value. Put the number, name or ID in the criterion." },
+    { test: "Objective", re: /\b(?:appropriate(?:ly)?|sensible|sensibly|reasonabl[ey]|good|well|nice|great|best|better|optimal(?:ly)?|correct(?:ly)?|accurate(?:ly)?|proper(?:ly)?|adequate(?:ly)?|sufficient(?:ly)?|affordable|high[- ]quality|effective(?:ly)?|clear(?:ly)?|relevant|suitable|thorough(?:ly)?|strong|robust|professional(?:ly)?|engaging|compelling|meaningful|polished|unsafe|safe)\b/gi,
+      note: "Judgment word. Replace it with the observable fact a grader can check." },
+    { test: "Verifiable", re: /\b(?:consider(?:s|ed|ing)?|understand(?:s|ing)?|understood|(?:take|takes|took|taking|taken)\s+(?:[\w’'-]+\s+){0,6}?into\s+account|aware(?:ness)?|think(?:s|ing)?|thought|know(?:s|ing)?|knew|realiz(?:e|es|ed)|recogniz(?:e|es|ed)|attempt(?:s|ed)?|tr(?:y|ies|ied)|intend(?:s|ed)?|phone(?:s|d)?|telephone(?:d)?|emailed|contacted|reached out|kept in mind|bears? in mind)\b/gi,
+      note: "Describes thinking or an offline action. A grader sees only the response, so name what it shows." }
+  ];
+
+  function lint(text) {
+    const found = [];
+    for (const rule of RULES) {
+      rule.re.lastIndex = 0;
+      let m;
+      while ((m = rule.re.exec(text)) !== null) {
+        if (m[0].length === 0) { rule.re.lastIndex++; continue; }
+        found.push({ test: rule.test, start: m.index, end: m.index + m[0].length, word: m[0].trim(), note: rule.note });
+      }
+    }
+    found.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+    const kept = [];
+    let lastEnd = -1;
+    for (const f of found) { if (f.start >= lastEnd) { kept.push(f); lastEnd = f.end; } }
+    return kept;
+  }
+
+  function formChecks(text, weightRaw, label, cat) {
+    const out = [];
+    const t = text.trim();
+    if (!t) return out;
+    if (/^(?:does|do|is|are|did|can|should|will|ensure|make sure|check|verify|confirm|evaluate|assess|determine|please)\b/i.test(t) || /\?\s*$/.test(t)) {
+      out.push({ level: "warn", test: "Form", msg: "Write a declarative statement a grader marks true or false, not a question or an instruction." });
+    }
+    if (t.length > 220) out.push({ level: "warn", test: "Atomic", msg: "Long criteria often hide more than one check. Can it be split?" });
+    const w = Number(weightRaw);
+    if (weightRaw === "" || Number.isNaN(w)) {
+      out.push({ level: "warn", test: "Weight", msg: "Add a weight from −100 to 100." });
+    } else if (Math.abs(w) > 100) {
+      out.push({ level: "warn", test: "Weight", msg: "Weights run from −100 to 100." });
+    } else if (w === 0) {
+      out.push({ level: "warn", test: "Weight", msg: "A weight of 0 makes the criterion count for nothing." });
+    } else if (w < 0) {
+      if (/\b(?:not|never|no|avoids?|without|excludes?)\b/i.test(t)) {
+        out.push({ level: "warn", test: "Weight", msg: "This reads like a desired behavior with a negative weight. Describe the mistake itself, so the statement is true when the response goes wrong: “A meal row books Lantern Grill (V03).”" });
+      } else {
+        out.push({ level: "info", test: "Weight", msg: "Negative weight: this statement should describe the mistake, so points come off when it is true." });
+      }
+    }
+    if (cat === "Formatting" && w > 30) out.push({ level: "warn", test: "Weight", msg: "Formatting checks usually sit around 10 to 25, below the analysis." });
+    if ((cat === "Extraction" || cat === "Reasoning") && !/\d/.test(t)) out.push({ level: "warn", test: "Self-contained", msg: "Extraction and reasoning criteria usually state the exact value, date or ID." });
+    if (label === "Explicit" && /\b[A-Z]{1,3}\d{1,3}\b/.test(t)) out.push({ level: "info", test: "Label", msg: "Specific is not explicit. An ID from the files usually makes a criterion implicit, unless the prompt names it." });
+    return out;
+  }
+
+  function markup(text, flags) {
+    let html = "", i = 0;
+    for (const f of flags) {
+      html += esc(text.slice(i, f.start));
+      html += '<mark class="flag" title="' + esc(f.test) + '">' + esc(text.slice(f.start, f.end)) + "</mark>";
+      i = f.end;
+    }
+    return html + esc(text.slice(i));
+  }
+
+  /* ---------------- State ---------------- */
+  const KEY = "rubric-lab-v1";
+  const VIEWS = ["learn", "practice", "checker", "checklist"];
+  const state = {
+    view: "learn", lesson: 0, filter: "all", q: 0, answers: {},
+    checks: CHECKS.map(() => false),
+    checker: { text: EXAMPLES[0].text, weight: String(EXAMPLES[0].weight), label: EXAMPLES[0].label, cat: EXAMPLES[0].cat }
+  };
+
+  function merge(src) {
+    if (!src || typeof src !== "object") return;
+    if (VIEWS.includes(src.view)) state.view = src.view;
+    if (Number.isInteger(src.lesson) && src.lesson >= 0 && src.lesson < LESSONS.length) state.lesson = src.lesson;
+    if (TOPICS.some((t) => t.id === src.filter)) state.filter = src.filter;
+    if (Number.isInteger(src.q) && src.q >= 0) state.q = src.q;
+    if (src.answers && typeof src.answers === "object") state.answers = src.answers;
+    if (Array.isArray(src.checks) && src.checks.length === CHECKS.length) state.checks = src.checks.map(Boolean);
+    if (src.checker && typeof src.checker === "object" && typeof src.checker.text === "string") state.checker = Object.assign({}, state.checker, src.checker);
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ } }
+  function load() { try { const raw = localStorage.getItem(KEY); if (raw) merge(JSON.parse(raw)); } catch (e) { /* ignore */ } }
+
+  /* ---------------- Routing ---------------- */
+  function applyHash() {
+    const h = (location.hash || "").slice(1);
+    const m = /^lesson-(\d+)$/.exec(h);
+    if (VIEWS.includes(h)) state.view = h;
+    else if (m) {
+      const n = Number(m[1]) - 1;
+      if (n >= 0 && n < LESSONS.length) { state.view = "learn"; state.lesson = n; }
+    }
+    renderAll();
+  }
+  function go(hash) {
+    if (location.hash === "#" + hash) applyHash();
+    else location.hash = hash;
+  }
+
+  /* ---------------- Render: tabs ---------------- */
+  function renderTabs() {
+    for (const b of $$(".tab")) {
+      const on = b.dataset.view === state.view;
+      b.setAttribute("aria-selected", on ? "true" : "false");
+      b.tabIndex = on ? 0 : -1;
+    }
+    for (const v of VIEWS) $("#view-" + v).hidden = v !== state.view;
+    const auto = QUESTIONS;
+    const answered = auto.filter((q) => isDone(q)).length;
+    $("#practice-count").textContent = answered + "/" + QUESTIONS.length;
+    $("#check-count").textContent = state.checks.filter(Boolean).length + "/" + CHECKS.length;
+  }
+
+  /* ---------------- Render: learn ---------------- */
+  function renderLearn() {
+    const nav = $("#lesson-nav");
+    nav.innerHTML = LESSONS.map((l, i) =>
+      '<button type="button" data-lesson="' + i + '"' + (i === state.lesson ? ' aria-current="true"' : "") + '><span class="n">' + String(i + 1).padStart(2, "0") + "</span><span>" + l.title + "</span></button>"
+    ).join("");
+    const l = LESSONS[state.lesson];
+    const prev = state.lesson > 0 ? '<a class="btn ghost small" href="#lesson-' + state.lesson + '">&larr; ' + LESSONS[state.lesson - 1].title + "</a>" : "<span></span>";
+    const next = state.lesson < LESSONS.length - 1
+      ? '<a class="btn small" href="#lesson-' + (state.lesson + 2) + '">' + LESSONS[state.lesson + 1].title + " &rarr;</a>"
+      : '<a class="btn small" href="#practice">Start practicing &rarr;</a>';
+    $("#lesson").innerHTML =
+      '<div class="kicker">Lesson ' + (state.lesson + 1) + " of " + LESSONS.length + "</div><h2>" + l.title + "</h2>" + l.html +
+      '<div class="lesson-foot">' + prev + next + "</div>";
+  }
+
+  /* ---------------- Render: practice ---------------- */
+  const filtered = () => QUESTIONS.filter((q) => state.filter === "all" || q.topic === state.filter);
+  const ans = (q) => state.answers[q.id] || {};
+  const isDone = (q) => { const a = state.answers[q.id]; return !!(a && (a.checked || a.self)); };
+
+  function grade(q, a) {
+    if (q.type === "single" || q.type === "multi") {
+      const sel = new Set(a.sel || []);
+      return q.options.every((o, i) => !!o.ok === sel.has(i));
+    }
+    if (q.type === "label") return q.items.every((it, i) => (a.sel || [])[i] === it.a);
+    return null;
+  }
+
+  function renderPractice() {
+    $("#filters").innerHTML = TOPICS.map((t) =>
+      '<button type="button" class="filter" data-filter="' + t.id + '" aria-pressed="' + (t.id === state.filter) + '">' + t.label + "</button>"
+    ).join("");
+
+    const graded = QUESTIONS.filter((q) => q.type !== "write" && ans(q).checked);
+    const right = graded.filter((q) => ans(q).correct).length;
+    const done = QUESTIONS.filter(isDone).length;
+    $("#scoreline").innerHTML =
+      "<span><b>" + right + "</b> of <b>" + graded.length + "</b> graded answers correct &middot; <b>" + done + "</b> of " + QUESTIONS.length + " done</span>" +
+      '<button type="button" class="btn warn small" id="reset-progress">' + (resetArmed ? "Click again to reset" : "Reset progress") + "</button>";
+
+    const list = filtered();
+    if (state.q >= list.length) state.q = 0;
+    $("#qmap").innerHTML = list.map((q, i) => {
+      const a = ans(q);
+      let cls = "";
+      if (q.type === "write" && (a.self || a.revealed)) cls = "done";
+      else if (a.checked) cls = a.correct ? "right" : "wrong";
+      const num = QUESTIONS.indexOf(q) + 1;
+      return '<button type="button" class="qdot ' + cls + '" data-goto="' + i + '"' + (i === state.q ? ' aria-current="true"' : "") + ' aria-label="Question ' + num + '">' + num + "</button>";
+    }).join("");
+
+    const q = list[state.q];
+    $("#qcard").innerHTML = q ? questionHTML(q, list) : "<p>No questions in this topic.</p>";
+  }
+
+  function questionHTML(q, list) {
+    const a = ans(q);
+    const num = QUESTIONS.indexOf(q) + 1;
+    const topic = TOPICS.find((t) => t.id === q.topic);
+    let body = "";
+    const ctx = q.context ? '<div class="qcontext">' + (q.context.trim().startsWith("<div") ? q.context : '<div class="crit-box">' + q.context + "</div>") + "</div>" : "";
+
+    if (q.type === "single" || q.type === "multi") {
+      const sel = new Set(a.sel || []);
+      const kind = q.type === "single" ? "radio" : "checkbox";
+      body = '<div class="opts" role="group">' + q.options.map((o, i) => {
+        let cls = "", mark = "";
+        if (a.checked) {
+          if (sel.has(i) && o.ok) { cls = "correct"; mark = "Correct"; }
+          else if (sel.has(i) && !o.ok) { cls = "wrong"; mark = "Not this one"; }
+          else if (!sel.has(i) && o.ok) { cls = "missed"; mark = q.type === "multi" ? "Missed" : "Answer"; }
+        }
+        return '<label class="opt ' + cls + '"><input type="' + kind + '" name="opt-' + q.id + '" data-opt="' + i + '"' + (sel.has(i) ? " checked" : "") + (a.checked ? " disabled" : "") + "><span>" + o.t + (mark ? '<span class="mark">' + mark + "</span>" : "") + "</span></label>";
+      }).join("") + "</div>";
+    } else if (q.type === "label") {
+      const sel = a.sel || [];
+      body = '<div class="labels">' + q.items.map((it, i) => {
+        let cls = "", verdict = "";
+        if (a.checked) {
+          const ok = sel[i] === it.a;
+          cls = ok ? "correct" : "wrong";
+          verdict = ok ? '<span class="verdict" style="color:var(--pass)">Correct</span>' : '<span class="verdict" style="color:var(--pencil)">Answer: ' + it.a + "</span>";
+        }
+        return '<div class="label-item ' + cls + '"><span class="crit-cell">' + it.t + '</span><div class="seg" role="group" aria-label="Choose a label">' +
+          q.choices.map((c) => '<button type="button" data-item="' + i + '" data-choice="' + esc(c) + '" aria-pressed="' + (sel[i] === c) + '"' + (a.checked ? " disabled" : "") + ">" + c + "</button>").join("") +
+          "</div>" + verdict + "</div>";
+      }).join("") + "</div>";
+    } else if (q.type === "write") {
+      body = '<label for="w-' + q.id + '" class="note" style="display:block;margin-bottom:.35rem">Your criterion</label><textarea id="w-' + q.id + '" data-write="' + q.id + '" placeholder="Write one declarative statement a grader can mark PASS or FAIL.">' + esc(a.text || "") + "</textarea>";
+      if (a.lintShown) body += lintBlock(a.text || "");
+    }
+
+    let actions = "", feedback = "";
+    if (q.type === "write") {
+      actions = '<button type="button" class="btn" data-action="lint">Check my draft</button><button type="button" class="btn ghost" data-action="reveal">' + (a.revealed ? "Hide model answer" : "Show model answer") + "</button>";
+      if (a.revealed) {
+        feedback = '<div class="feedback"><h4>Model answer</h4><div class="model">' + q.model + "</div>" + (q.alt ? '<p class="note">' + q.alt + "</p>" : "") +
+          "<h4 style=\"margin-top:.7rem\">Does yours do this?</h4><ul class=\"selfcheck\">" + q.checks.map((c) => "<li>" + c + "</li>").join("") + "</ul>" +
+          '<div class="qactions" style="margin-top:.8rem"><button type="button" class="btn small' + (a.self === "ok" ? "" : " ghost") + '" data-action="self-ok">Mine covers all of it</button><button type="button" class="btn small' + (a.self === "work" ? "" : " ghost") + '" data-action="self-work">Mine needs work</button></div></div>';
+      }
+    } else if (a.checked) {
+      actions = '<button type="button" class="btn ghost" data-action="retry">Try again</button>';
+      feedback = '<div class="feedback ' + (a.correct ? "ok" : "no") + '"><h4>' + (a.correct ? "Correct." : "Not quite.") + "</h4><p>" + q.explain + "</p></div>";
+    } else {
+      const ready = q.type === "label" ? (a.sel || []).filter(Boolean).length === q.items.length : (a.sel || []).length > 0;
+      actions = '<button type="button" class="btn" data-action="check"' + (ready ? "" : " disabled") + ">Check answer</button>" + (ready ? "" : '<span class="note" style="margin:0">' + (q.type === "label" ? "Label every item to check." : "Choose an answer to check.") + "</span>");
+    }
+
+    const idx = list.indexOf(q);
+    const nav = '<div class="qnav"><button type="button" class="btn ghost small" data-action="prev"' + (idx === 0 ? " disabled" : "") + '>&larr; Previous</button><button type="button" class="btn small" data-action="next"' + (idx === list.length - 1 ? " disabled" : "") + ">Next &rarr;</button></div>";
+
+    return '<div class="qhead"><span class="qn">Question ' + num + " of " + QUESTIONS.length + '</span><span class="chip muted">' + topic.label + "</span></div>" +
+      ctx + '<div class="qstem">' + q.stem + "</div>" + body + '<div class="qactions">' + actions + "</div>" + feedback + nav;
+  }
+
+  function lintBlock(text) {
+    const t = text.trim();
+    if (!t) return '<div class="feedback"><p>Write a draft first.</p></div>';
+    const flags = lint(t);
+    const form = formChecks(t, "50", "Implicit", "Reasoning").filter((f) => f.test !== "Weight" && f.test !== "Self-contained");
+    const items = flags.map((f) => "<li><span class=\"t\">" + f.test + "</span><span><q>" + esc(f.word) + "</q> " + f.note + "</span></li>")
+      .concat(form.map((f) => "<li><span class=\"t\">" + f.test + "</span><span>" + esc(f.msg) + "</span></li>"));
+    return '<div class="feedback" style="background:var(--sheet)"><div class="marked" style="margin-top:0">' + markup(t, flags) + "</div>" +
+      (items.length ? '<ul class="findings">' + items.join("") + "</ul>" : '<p style="color:var(--pass);font-weight:700;margin:0">No red-flag words found. Compare it with the model answer next.</p>') + "</div>";
+  }
+
+  /* ---------------- Render: checker ---------------- */
+  function renderChecker() {
+    const c = state.checker;
+    const ta = $("#ck-text");
+    if (document.activeElement !== ta) ta.value = c.text;
+    const wi = $("#ck-weight");
+    if (document.activeElement !== wi) wi.value = c.weight;
+    $("#ck-label").value = c.label;
+    $("#ck-cat").value = c.cat;
+    $("#ck-examples").innerHTML = EXAMPLES.map((e, i) => '<button type="button" data-example="' + i + '">' + e.name + "</button>").join("");
+    renderCheckResult();
+  }
+  function renderCheckResult() {
+    const c = state.checker;
+    const t = c.text.trim();
+    const flags = t ? lint(t) : [];
+    const form = formChecks(t, c.weight, c.label, c.cat);
+    const warnCount = flags.length + form.filter((f) => f.level === "warn").length;
+    let verdict;
+    if (!t) verdict = '<span class="chip muted">Waiting</span><span>Type or paste a criterion.</span>';
+    else if (warnCount === 0) verdict = '<span class="chip pass">No red flags</span><span>Re-read it once against the four tests.</span>';
+    else verdict = '<span class="chip fail">' + warnCount + (warnCount === 1 ? " thing" : " things") + " to check</span>";
+    $("#ck-verdict").innerHTML = verdict;
+    $("#ck-marked").innerHTML = t ? markup(t, flags) : '<span class="note">Your marked-up criterion appears here.</span>';
+    $("#ck-findings").innerHTML =
+      flags.map((f) => '<li><span class="t">' + f.test + "</span><span><q>" + esc(f.word) + "</q> " + f.note + "</span></li>").join("") +
+      form.map((f) => '<li class="' + (f.level === "info" ? "info" : "") + '"><span class="t">' + f.test + "</span><span>" + esc(f.msg) + "</span></li>").join("");
+  }
+
+  /* ---------------- Render: checklist ---------------- */
+  function renderChecklist() {
+    $("#checks").innerHTML = CHECKS.map((c, i) =>
+      '<li><label class="' + (state.checks[i] ? "on" : "") + '"><input type="checkbox" data-check="' + i + '"' + (state.checks[i] ? " checked" : "") + "><span><b>" + (i + 1) + ". </b>" + c.t + '<span class="hint">' + c.h + "</span></span></label></li>"
+    ).join("");
+    const n = state.checks.filter(Boolean).length;
+    $("#meter-bar").style.width = (n / CHECKS.length * 100) + "%";
+    $("#checks-ready").textContent = n === CHECKS.length ? "All seven checks done. The rubric is ready to submit." : n + " of " + CHECKS.length + " checks done";
+  }
+
+  function renderAll() {
+    renderTabs();
+    if (state.view === "learn") renderLearn();
+    if (state.view === "practice") renderPractice();
+    if (state.view === "checker") renderChecker();
+    if (state.view === "checklist") renderChecklist();
+    save();
+  }
+
+  /* ---------------- Events ---------------- */
+  let resetArmed = false;
+
+  $(".tabs").addEventListener("click", (e) => {
+    const b = e.target.closest(".tab");
+    if (b) go(b.dataset.view);
+  });
+  $(".tabs").addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const i = VIEWS.indexOf(state.view);
+    const n = (i + (e.key === "ArrowRight" ? 1 : VIEWS.length - 1)) % VIEWS.length;
+    go(VIEWS[n]);
+    setTimeout(() => $("#tab-" + VIEWS[n]).focus(), 0);
+  });
+
+  $("#lesson-nav").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-lesson]");
+    if (b) go("lesson-" + (Number(b.dataset.lesson) + 1));
+  });
+
+  $("#view-practice").addEventListener("click", (e) => {
+    const f = e.target.closest("[data-filter]");
+    if (f) { state.filter = f.dataset.filter; state.q = 0; resetArmed = false; renderAll(); return; }
+    const g = e.target.closest("[data-goto]");
+    if (g) { state.q = Number(g.dataset.goto); renderAll(); $("#qcard").scrollIntoView({ block: "nearest" }); return; }
+    if (e.target.closest("#reset-progress")) {
+      if (resetArmed) { state.answers = {}; state.q = 0; resetArmed = false; }
+      else { resetArmed = true; setTimeout(() => { resetArmed = false; if (state.view === "practice") renderPractice(); }, 4000); }
+      renderAll(); return;
+    }
+    const list = filtered();
+    const q = list[state.q];
+    if (!q) return;
+    const a = state.answers[q.id] = state.answers[q.id] || {};
+    const seg = e.target.closest("[data-choice]");
+    if (seg && !a.checked) {
+      a.sel = a.sel || [];
+      a.sel[Number(seg.dataset.item)] = seg.dataset.choice;
+      renderAll(); return;
+    }
+    const act = e.target.closest("[data-action]");
+    if (!act || act.disabled) return;
+    const kind = act.dataset.action;
+    if (kind === "check") { a.checked = true; a.correct = grade(q, a); }
+    else if (kind === "retry") { delete state.answers[q.id]; }
+    else if (kind === "next") { state.q = Math.min(state.q + 1, list.length - 1); }
+    else if (kind === "prev") { state.q = Math.max(state.q - 1, 0); }
+    else if (kind === "lint") { a.lintShown = true; }
+    else if (kind === "reveal") { a.revealed = !a.revealed; }
+    else if (kind === "self-ok") { a.self = "ok"; }
+    else if (kind === "self-work") { a.self = "work"; }
+    renderAll();
+    if (kind === "next" || kind === "prev") $("#qcard").scrollIntoView({ block: "nearest" });
+  });
+
+  $("#view-practice").addEventListener("change", (e) => {
+    const inp = e.target.closest("[data-opt]");
+    if (!inp) return;
+    const q = filtered()[state.q];
+    const a = state.answers[q.id] = state.answers[q.id] || {};
+    const i = Number(inp.dataset.opt);
+    if (q.type === "single") a.sel = [i];
+    else {
+      const s = new Set(a.sel || []);
+      if (inp.checked) s.add(i); else s.delete(i);
+      a.sel = Array.from(s).sort((x, y) => x - y);
+    }
+    renderAll();
+  });
+
+  $("#view-practice").addEventListener("input", (e) => {
+    const ta = e.target.closest("[data-write]");
+    if (!ta) return;
+    const a = state.answers[ta.dataset.write] = state.answers[ta.dataset.write] || {};
+    a.text = ta.value;
+    save();
+  });
+
+  $("#ck-text").addEventListener("input", (e) => { state.checker.text = e.target.value; renderCheckResult(); save(); });
+  $("#ck-weight").addEventListener("input", (e) => { state.checker.weight = e.target.value; renderCheckResult(); save(); });
+  $("#ck-label").addEventListener("change", (e) => { state.checker.label = e.target.value; renderCheckResult(); save(); });
+  $("#ck-cat").addEventListener("change", (e) => { state.checker.cat = e.target.value; renderCheckResult(); save(); });
+  $("#ck-examples").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-example]");
+    if (!b) return;
+    const ex = EXAMPLES[Number(b.dataset.example)];
+    state.checker = { text: ex.text, weight: String(ex.weight), label: ex.label, cat: ex.cat };
+    renderChecker(); save();
+  });
+
+  $("#checks").addEventListener("change", (e) => {
+    const c = e.target.closest("[data-check]");
+    if (!c) return;
+    state.checks[Number(c.dataset.check)] = c.checked;
+    renderAll();
+  });
+  $("#checks-reset").addEventListener("click", () => { state.checks = CHECKS.map(() => false); renderAll(); });
+
+  window.addEventListener("hashchange", applyHash);
+
+  /* ---------------- Boot ---------------- */
+  window.__rubricLab = { lint, formChecks, grade, QUESTIONS, LESSONS };
+  const hot = window.claude && window.claude.hot;
+  if (hot && typeof hot.snapshot === "function") hot.snapshot(() => JSON.parse(JSON.stringify(state)));
+  function start(data) {
+    if (data && typeof data === "object" && Object.keys(data).length) merge(data); else load();
+    applyHash();
+  }
+  if (hot && typeof hot.ready === "function") hot.ready(start); else start((hot && hot.data) || {});
+})();
+</script>
+</body>
+</html>
